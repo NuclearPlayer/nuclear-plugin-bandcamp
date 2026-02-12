@@ -1,8 +1,7 @@
+import type { FetchFn } from './html';
 import { extractTextContent, fetchHtml } from './html';
+import { BANDCAMP_SEARCH_URL } from './config';
 import type { BandcampSearchItem } from './types';
-
-const BANDCAMP_BASE = 'https://bandcamp.com';
-const BANDCAMP_SEARCH = `${BANDCAMP_BASE}/search`;
 
 const SELECTORS = {
   resultList: 'li.searchresult',
@@ -60,35 +59,46 @@ const parseSearchItem = (listItem: Element): BandcampSearchItem | undefined => {
 };
 
 const searchBandcamp = async (
+  fetchFn: FetchFn,
   query: string,
   itemType: string,
   limit: number,
 ): Promise<BandcampSearchItem[]> => {
-  const searchUrl = `${BANDCAMP_SEARCH}?q=${encodeURIComponent(query)}&item_type=${itemType}&page=1`;
-  const doc = await fetchHtml(searchUrl);
+  const searchUrl = `${BANDCAMP_SEARCH_URL}?q=${encodeURIComponent(query)}&item_type=${itemType}&page=1`;
+  const doc = await fetchHtml(fetchFn, searchUrl);
   const resultItems = doc.querySelectorAll(SELECTORS.resultList);
 
-  const items: BandcampSearchItem[] = [];
-  for (const listItem of resultItems) {
-    if (items.length >= limit) break;
-    const parsed = parseSearchItem(listItem);
-    if (parsed) items.push(parsed);
-  }
+  const items = Array.from(resultItems).reduce<BandcampSearchItem[]>(
+    (acc, listItem) => {
+      if (acc.length >= limit) {
+        return acc;
+      }
+      const parsed = parseSearchItem(listItem);
+      if (parsed) {
+        acc.push(parsed);
+      }
+      return acc;
+    },
+    [],
+  );
 
   return items;
 };
 
 export const searchArtists = (
+  fetchFn: FetchFn,
   query: string,
   limit: number,
-): Promise<BandcampSearchItem[]> => searchBandcamp(query, 'b', limit);
+): Promise<BandcampSearchItem[]> => searchBandcamp(fetchFn, query, 'b', limit);
 
 export const searchAlbums = (
+  fetchFn: FetchFn,
   query: string,
   limit: number,
-): Promise<BandcampSearchItem[]> => searchBandcamp(query, 'a', limit);
+): Promise<BandcampSearchItem[]> => searchBandcamp(fetchFn, query, 'a', limit);
 
 export const searchTracks = (
+  fetchFn: FetchFn,
   query: string,
   limit: number,
-): Promise<BandcampSearchItem[]> => searchBandcamp(query, 't', limit);
+): Promise<BandcampSearchItem[]> => searchBandcamp(fetchFn, query, 't', limit);

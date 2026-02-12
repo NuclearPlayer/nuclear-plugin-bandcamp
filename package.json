@@ -1,7 +1,7 @@
 {
   "name": "nuclear-plugin-bandcamp",
   "version": "0.1.0",
-  "description": "Bandcamp metadata provider for Nuclear music player",
+  "description": "Bandcamp metadata and streaming provider for Nuclear music player",
   "author": "nukeop",
   "license": "AGPL-3.0-only",
   "main": "src/index.ts",
@@ -19,7 +19,8 @@
     "nuclear",
     "plugin",
     "bandcamp",
-    "metadata"
+    "metadata",
+    "streaming"
   ],
   "repository": {
     "type": "git",
@@ -33,7 +34,10 @@
     "README.md"
   ],
   "dependencies": {
-    "@nuclearplayer/plugin-sdk": "^1.1.0"
+    "@nuclearplayer/plugin-sdk": "^1.2.0"
   },
-  "packageManager": "pnpm@10.16.1"
+  "packageManager": "pnpm@10.16.1",
+  "devDependencies": {
+    "typescript": "^5.9.3"
+  }
 }

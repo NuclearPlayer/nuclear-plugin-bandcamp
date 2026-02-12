@@ -1,6 +1,6 @@
-# Bandcamp Metadata Plugin for Nuclear
+# Bandcamp Plugin for Nuclear
 
-A metadata provider plugin that fetches artist and album information from [Bandcamp](https://bandcamp.com/).
+A plugin that provides metadata and streaming from [Bandcamp](https://bandcamp.com/). Browse artists, albums, and tracks, then play them directly.
 
 ## Installation
 

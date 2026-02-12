@@ -26,6 +26,8 @@ export type BandcampTrackDetail = {
   url?: string;
   durationMs?: number;
   position?: number;
+  streamable: boolean;
+  streamUrl?: string;
 };
 
 export type BandcampArtistDetail = {
@@ -76,11 +78,16 @@ export type JsonLdWithPublisher = {
   };
 };
 
+export type DataTralbumTrackFile = {
+  'mp3-128'?: string;
+};
+
 export type DataTralbumTrack = {
   title: string;
   track_num: number;
   duration: number;
   title_link?: string;
+  file?: DataTralbumTrackFile;
 };
 
 export type DataTralbum = {

@@ -5,6 +5,7 @@ import type {
   ArtistRef,
   ArtworkSet,
   ProviderRef,
+  StreamCandidate,
   Track,
 } from '@nuclearplayer/plugin-sdk';
 
@@ -15,17 +16,14 @@ import type {
   BandcampSearchItem,
 } from './types';
 import type { LastfmArtist } from './lastfm';
-
-const PROVIDER_ID = 'bandcamp';
+import { encodeId } from './html';
+import { METADATA_PROVIDER_ID } from './config';
 
 const LARGE_IMAGE_SUFFIX = '_10.jpg';
 const THUMBNAIL_IMAGE_SUFFIX = '_2.jpg';
 
-const encodeId = (url: string): string =>
-  btoa(url).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
-
 const makeSource = (url: string): ProviderRef => ({
-  provider: PROVIDER_ID,
+  provider: METADATA_PROVIDER_ID,
   id: encodeId(url),
   url,
 });
@@ -89,6 +87,17 @@ const parseAlbumAndArtistFromSubhead = (
   return {};
 };
 
+const combineTags = (
+  genre?: string,
+  tags?: string[],
+): string[] | undefined => {
+  const combined = [
+    ...(genre ? [genre] : []),
+    ...(tags ?? []),
+  ];
+  return combined.length > 0 ? combined : undefined;
+};
+
 const parseReleaseDate = (
   dateString?: string,
 ): { precision: 'year' | 'month' | 'day'; dateIso: string } | undefined => {
@@ -145,7 +154,7 @@ export const mapSearchItemToTrack = (
     album: album
       ? { title: album, source: makeSource(artistUrl) }
       : undefined,
-    tags: item.tags,
+    tags: combineTags(item.genre, item.tags),
     artwork: makeArtworkSet(item.imageUrl),
     source: makeSource(item.url),
   };
@@ -175,7 +184,7 @@ export const mapAlbumDetail = (
         : undefined,
     },
   ],
-  tracks: detail.tracks.map((track) => ({
+  tracks: detail.tracks.filter((track) => track.streamable).map((track) => ({
     title: track.title,
     artists: [
       {
@@ -200,5 +209,17 @@ export const mapDiscographyItemToAlbumRef = (
 ): AlbumRef => ({
   title: item.title,
   artwork: makeArtworkSet(item.imageUrl),
+  source: makeSource(item.url),
+});
+
+export const mapSearchItemToStreamCandidate = (
+  item: BandcampSearchItem,
+): StreamCandidate => ({
+  id: encodeId(item.url),
+  title: item.name,
+  thumbnail: item.imageUrl
+    ? replaceImageSuffix(item.imageUrl, THUMBNAIL_IMAGE_SUFFIX)
+    : undefined,
+  failed: false,
   source: makeSource(item.url),
 });

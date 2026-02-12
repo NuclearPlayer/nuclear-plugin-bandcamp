@@ -1,12 +1,12 @@
+import type { FetchFn } from './html';
 import { extractJsonLd, extractTextContent, fetchHtml } from './html';
+import { ARTIST_CACHE_TTL_MS, BANDCAMP_IMAGE_BASE } from './config';
 import type {
   BandcampArtistDetail,
   BandcampDiscographyItem,
   DataBand,
   JsonLdWithPublisher,
 } from './types';
-
-const BANDCAMP_IMAGE_BASE = 'https://f4.bcbits.com/img';
 
 const SELECTORS = {
   bandName: '#band-name-location .title',
@@ -31,17 +31,17 @@ const extractDataBand = (doc: Document): DataBand | undefined => {
   return JSON.parse(raw) as DataBand;
 };
 
-const ARTIST_CACHE_TTL_MS = 30_000;
 const artistCache = new Map<string, { data: BandcampArtistDetail; timestamp: number }>();
 
 export const getArtistDetails = async (
+  fetchFn: FetchFn,
   artistUrl: string,
 ): Promise<BandcampArtistDetail> => {
   const cached = artistCache.get(artistUrl);
   if (cached && Date.now() - cached.timestamp < ARTIST_CACHE_TTL_MS) {
     return cached.data;
   }
-  const doc = await fetchHtml(artistUrl);
+  const doc = await fetchHtml(fetchFn, artistUrl);
 
   const dataBand = extractDataBand(doc);
   const jsonLd = extractJsonLd<JsonLdWithPublisher>(doc);
@@ -81,39 +81,42 @@ export const getArtistDetails = async (
 };
 
 export const getArtistDiscography = async (
+  fetchFn: FetchFn,
   artistUrl: string,
 ): Promise<BandcampDiscographyItem[]> => {
   const musicPageUrl = artistUrl.endsWith('/')
     ? `${artistUrl}music`
     : `${artistUrl}/music`;
 
-  const doc = await fetchHtml(musicPageUrl);
+  const doc = await fetchHtml(fetchFn, musicPageUrl);
 
   const gridItems = doc.querySelectorAll(SELECTORS.discographyItem);
-  const discography: BandcampDiscographyItem[] = [];
+  const discography = Array.from(gridItems).reduce<BandcampDiscographyItem[]>(
+    (accumulated, gridItem) => {
+      const link = gridItem.querySelector('a');
+      const image = gridItem.querySelector('img');
+      const titleElement = gridItem.querySelector(SELECTORS.discographyTitle);
 
-  for (const gridItem of gridItems) {
-    const link = gridItem.querySelector('a');
-    const image = gridItem.querySelector('img');
-    const titleElement = gridItem.querySelector(SELECTORS.discographyTitle);
+      const href = link?.getAttribute('href');
+      if (!href) return accumulated;
 
-    const href = link?.getAttribute('href');
-    if (!href) continue;
+      const fullUrl = new URL(href, artistUrl).href;
+      const title = extractTextContent(titleElement) ?? '';
+      const imageUrl = image?.getAttribute('src') ?? undefined;
 
-    const fullUrl = new URL(href, artistUrl).href;
-    const title = extractTextContent(titleElement) ?? '';
-    const imageUrl = image?.getAttribute('src') ?? undefined;
+      const dataItemId = gridItem.getAttribute('data-item-id') ?? '';
+      const itemType = dataItemId.startsWith('album') ? 'album' as const : 'track' as const;
 
-    const dataItemId = gridItem.getAttribute('data-item-id') ?? '';
-    const itemType = dataItemId.startsWith('album') ? 'album' as const : 'track' as const;
-
-    discography.push({
-      title,
-      url: fullUrl,
-      imageUrl,
-      type: itemType,
-    });
-  }
+      accumulated.push({
+        title,
+        url: fullUrl,
+        imageUrl,
+        type: itemType,
+      });
+      return accumulated;
+    },
+    [],
+  );
 
   return discography;
 };

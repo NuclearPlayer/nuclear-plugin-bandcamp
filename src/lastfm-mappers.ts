@@ -1,6 +1,6 @@
 import type {
   ArtistRef,
-  Track,
+  TrackRef,
 } from '@nuclearplayer/plugin-sdk';
 
 import type { LastfmArtist, LastfmTopTracks } from './lastfm';
@@ -10,10 +10,10 @@ const LASTFM_PROVIDER_ID = 'lastfm';
 export const mapLastfmTopTracks = (
   lastfmData: LastfmTopTracks,
   artistName: string,
-): Track[] =>
+): TrackRef[] =>
   (lastfmData?.toptracks?.track ?? []).map((track) => ({
     title: track.name,
-    artists: [{ name: artistName, roles: [] }],
+    artists: [{ name: artistName, source: { provider: LASTFM_PROVIDER_ID, id: artistName } }],
     source: {
       provider: LASTFM_PROVIDER_ID,
       id: `${artistName}:${track.name}`,

@@ -9,13 +9,17 @@ importers:
   .:
     dependencies:
       '@nuclearplayer/plugin-sdk':
-        specifier: ^1.1.0
-        version: 1.1.0(react@18.3.1)
+        specifier: ^1.2.0
+        version: 1.2.0(react@18.3.1)
+    devDependencies:
+      typescript:
+        specifier: ^5.9.3
+        version: 5.9.3
 
 packages:
 
-  '@nuclearplayer/plugin-sdk@1.1.0':
-    resolution: {integrity: sha512-q1Z88eIC86fzz8XlxeX5zLfxNUDJJk8V86/N7JkIBI2pBYvOXCJxS7Tla2FRZw8e8e7UQh+xM2cF1iJGSyTeTw==}
+  '@nuclearplayer/plugin-sdk@1.2.0':
+    resolution: {integrity: sha512-/cmkBhxIzA36qjMwzGNWC562M8PDXZFyH8xk4d2jDcSFvAABmZ33OAwbvv2QZZo2xPUU4LPOrqh3tUeet8SlZA==}
     peerDependencies:
       react: ^18.3.1
 
@@ -45,9 +49,14 @@ packages:
   tailwind-merge@3.4.0:
     resolution: {integrity: sha512-uSaO4gnW+b3Y2aWoWfFpX62vn2sR3skfhbjsEnaBI81WD1wBLlHZe5sWf0AqjksNdYTbGBEd0UasQMT3SNV15g==}
 
+  typescript@5.9.3:
+    resolution: {integrity: sha512-jl1vZzPDinLr9eUt3J/t7V6FgNEw9QjvBPdysz9KfQDD41fQrC2Y4vKQdiaUpFT4bXlb1RHhLpp8wtm6M5TgSw==}
+    engines: {node: '>=14.17'}
+    hasBin: true
+
 snapshots:
 
-  '@nuclearplayer/plugin-sdk@1.1.0(react@18.3.1)':
+  '@nuclearplayer/plugin-sdk@1.2.0(react@18.3.1)':
     dependencies:
       class-variance-authority: 0.7.1
       clsx: 2.1.1
@@ -76,3 +85,5 @@ snapshots:
       loose-envify: 1.4.0
 
   tailwind-merge@3.4.0: {}
+
+  typescript@5.9.3: {}

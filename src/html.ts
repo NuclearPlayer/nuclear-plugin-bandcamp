@@ -1,13 +1,10 @@
-type FetchFn = (
+export type FetchFn = (
   input: RequestInfo | URL,
   init?: RequestInit,
 ) => Promise<Response>;
 
-let fetchFn: FetchFn = globalThis.fetch;
-
-export const setFetch = (customFetch: FetchFn): void => {
-  fetchFn = customFetch;
-};
+export const encodeId = (url: string): string =>
+  btoa(url).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
 
 export const decodeId = (encoded: string): string => {
   const base64 = encoded.replace(/-/g, '+').replace(/_/g, '/');
@@ -15,8 +12,14 @@ export const decodeId = (encoded: string): string => {
   return atob(padded);
 };
 
-export const fetchHtml = async (url: string): Promise<Document> => {
+export const fetchHtml = async (
+  fetchFn: FetchFn,
+  url: string,
+): Promise<Document> => {
   const response = await fetchFn(url);
+  if (!response.ok) {
+    throw new Error(`Bandcamp returned ${response.status} for ${url}`);
+  }
   const html = await response.text();
   const parser = new DOMParser();
   return parser.parseFromString(html, 'text/html');
@@ -31,13 +34,9 @@ export const extractTextContent = (
 
 export const extractJsonLd = <T>(doc: Document): T | undefined => {
   const scripts = doc.querySelectorAll('script[type="application/ld+json"]');
-  for (const script of scripts) {
-    const content = script.textContent;
-    if (!content) continue;
-    const parsed = JSON.parse(content) as T;
-    return parsed;
-  }
-  return undefined;
+  const script = Array.from(scripts).find((script) => script.textContent);
+  if (!script?.textContent) return undefined;
+  return JSON.parse(script.textContent) as T;
 };
 
 export const parseIsoDuration = (iso: string): number | undefined => {
