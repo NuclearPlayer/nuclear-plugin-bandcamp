@@ -6,13 +6,15 @@ import type {
 } from '@nuclearplayer/plugin-sdk';
 
 import { STREAMING_PROVIDER_ID, STREAMING_SEARCH_LIMIT } from './config';
-import { decodeId, encodeId } from './html';
+import { decodeId, encodeId, makeSource } from './html';
+import { mapSearchItemToStreamCandidate } from './mappers';
 import { searchTracks } from './search';
 import { getStreamUrl } from './stream';
-import { mapSearchItemToStreamCandidate } from './mappers';
-import { getCachedTrackUrl, getCachedStreamUrl } from './track-url-cache';
+import { getCachedStreamUrl, getCachedTrackUrl } from './track-url-cache';
 
-export const createStreamingProvider = (api: NuclearPluginAPI): StreamingProvider => ({
+export const createStreamingProvider = (
+  api: NuclearPluginAPI,
+): StreamingProvider => ({
   id: STREAMING_PROVIDER_ID,
   kind: 'streaming',
   name: 'Bandcamp',
@@ -25,13 +27,17 @@ export const createStreamingProvider = (api: NuclearPluginAPI): StreamingProvide
         id: encodeId(cachedUrl),
         title,
         failed: false,
-        source: { provider: STREAMING_PROVIDER_ID, id: encodeId(cachedUrl), url: cachedUrl },
+        source: makeSource(STREAMING_PROVIDER_ID, cachedUrl),
       };
       return [candidate];
     }
 
     const query = `${artist} ${title}`;
-    const items = await searchTracks(api.Http.fetch, query, STREAMING_SEARCH_LIMIT);
+    const items = await searchTracks(
+      api.Http.fetch,
+      query,
+      STREAMING_SEARCH_LIMIT,
+    );
     return items.map(mapSearchItemToStreamCandidate);
   },
 
@@ -45,7 +51,7 @@ export const createStreamingProvider = (api: NuclearPluginAPI): StreamingProvide
         protocol: 'https',
         mimeType: 'audio/mpeg',
         bitrateKbps: 128,
-        source: { provider: STREAMING_PROVIDER_ID, id: candidateId, url: trackUrl },
+        source: makeSource(STREAMING_PROVIDER_ID, trackUrl),
       };
       return stream;
     }
@@ -61,7 +67,7 @@ export const createStreamingProvider = (api: NuclearPluginAPI): StreamingProvide
       mimeType: 'audio/mpeg',
       bitrateKbps: 128,
       durationMs: streamInfo.durationMs,
-      source: { provider: STREAMING_PROVIDER_ID, id: candidateId, url: trackUrl },
+      source: makeSource(STREAMING_PROVIDER_ID, trackUrl),
     };
     return stream;
   },

@@ -1,9 +1,13 @@
 import type { FetchFn } from './html';
-import { extractJsonLd, fetchHtml, parseIsoDuration } from './html';
+import {
+  extractDataTralbum,
+  extractJsonLd,
+  fetchHtml,
+  parseIsoDuration,
+} from './html';
 import type {
   BandcampAlbumDetail,
   BandcampTrackDetail,
-  DataTralbum,
   JsonLdMusicAlbum,
 } from './types';
 
@@ -15,11 +19,7 @@ export const getAlbumDetails = async (
 
   const jsonLd = extractJsonLd<JsonLdMusicAlbum>(doc);
 
-  const tralbumScript = Array.from(doc.querySelectorAll('script[data-tralbum]'))
-    .find((script) => script.getAttribute('data-tralbum'));
-  const tralbumData = tralbumScript
-    ? JSON.parse(tralbumScript.getAttribute('data-tralbum')!) as DataTralbum
-    : undefined;
+  const tralbumData = extractDataTralbum(doc);
 
   const albumName = jsonLd?.name ?? '';
   const artistName = jsonLd?.byArtist?.name ?? '';
@@ -36,13 +36,13 @@ export const getAlbumDetails = async (
       (trTrack) => trTrack.track_num === entry.position,
     );
 
-    const durationMs =
-      matchingTralbumTrack
-        ? matchingTralbumTrack.duration * 1000
-        : parseIsoDuration(entry.item.duration ?? '');
+    const durationMs = matchingTralbumTrack
+      ? matchingTralbumTrack.duration * 1000
+      : parseIsoDuration(entry.item.duration ?? '');
 
-    const trackUrl = entry.item.url
-      ?? (matchingTralbumTrack?.title_link
+    const trackUrl =
+      entry.item.url ??
+      (matchingTralbumTrack?.title_link
         ? new URL(matchingTralbumTrack.title_link, albumUrl).href
         : undefined);
 
@@ -57,16 +57,18 @@ export const getAlbumDetails = async (
   });
 
   if (tracks.length === 0 && tralbumTracks.length > 0) {
-    tracks.push(...tralbumTracks.map((trTrack) => ({
-      title: trTrack.title,
-      url: trTrack.title_link
-        ? new URL(trTrack.title_link, albumUrl).href
-        : undefined,
-      durationMs: trTrack.duration * 1000,
-      position: trTrack.track_num,
-      streamable: Boolean(trTrack.file?.['mp3-128']),
-      streamUrl: trTrack.file?.['mp3-128'],
-    })));
+    tracks.push(
+      ...tralbumTracks.map((trTrack) => ({
+        title: trTrack.title,
+        url: trTrack.title_link
+          ? new URL(trTrack.title_link, albumUrl).href
+          : undefined,
+        durationMs: trTrack.duration * 1000,
+        position: trTrack.track_num,
+        streamable: Boolean(trTrack.file?.['mp3-128']),
+        streamUrl: trTrack.file?.['mp3-128'],
+      })),
+    );
   }
 
   return {

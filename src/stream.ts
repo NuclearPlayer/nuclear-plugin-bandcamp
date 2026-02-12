@@ -1,23 +1,17 @@
 import type { FetchFn } from './html';
-import { fetchHtml } from './html';
-import type { DataTralbum } from './types';
-
-const DATA_TRALBUM_SELECTOR = 'script[data-tralbum]';
+import { extractDataTralbum, fetchHtml } from './html';
 
 export const getStreamUrl = async (
   fetchFn: FetchFn,
   trackUrl: string,
 ): Promise<{ url: string; durationMs?: number }> => {
   const doc = await fetchHtml(fetchFn, trackUrl);
-  const scriptElement = doc.querySelector(DATA_TRALBUM_SELECTOR);
-
-  const rawData = scriptElement?.getAttribute('data-tralbum');
-  if (!rawData) {
+  const tralbumData = extractDataTralbum(doc);
+  if (!tralbumData) {
     throw new Error(`No data-tralbum found on page: ${trackUrl}`);
   }
 
-  const tralbum = JSON.parse(rawData) as DataTralbum;
-  const track = tralbum.trackinfo?.[0];
+  const track = tralbumData.trackinfo?.[0];
   if (!track) {
     throw new Error(`No track info found on page: ${trackUrl}`);
   }

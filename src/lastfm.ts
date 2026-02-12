@@ -3,7 +3,9 @@ export type LastfmArtist = {
     name: string;
     bio?: { content: string };
     tags?: { tag: { name: string }[] };
-    similar?: { artist: { name: string; image: { '#text': string; size: string }[] }[] };
+    similar?: {
+      artist: { name: string; image: { '#text': string; size: string }[] }[];
+    };
   };
 };
 
@@ -35,5 +37,3 @@ export const getArtistInfo = (artist: string): Promise<LastfmArtist> =>
 
 export const getArtistTopTracks = (artist: string): Promise<LastfmTopTracks> =>
   lastfmFetch('artist.getTopTracks', { artist, limit: '5' });
-
-

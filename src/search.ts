@@ -1,6 +1,6 @@
+import { BANDCAMP_SEARCH_URL } from './config';
 import type { FetchFn } from './html';
 import { extractTextContent, fetchHtml } from './html';
-import { BANDCAMP_SEARCH_URL } from './config';
 import type { BandcampSearchItem } from './types';
 
 const SELECTORS = {
@@ -16,9 +16,14 @@ const SELECTORS = {
 
 const parseSearchItem = (listItem: Element): BandcampSearchItem | undefined => {
   const dataAttr = listItem.getAttribute('data-search');
-  if (!dataAttr) return undefined;
+  if (!dataAttr) {
+    return undefined;
+  }
 
-  const searchData = JSON.parse(dataAttr) as { type: 'b' | 'a' | 't'; id: number };
+  const searchData = JSON.parse(dataAttr) as {
+    type: 'b' | 'a' | 't';
+    id: number;
+  };
 
   const imageElement = listItem.querySelector(SELECTORS.image);
   const headingLink = listItem.querySelector(SELECTORS.heading);
@@ -30,7 +35,9 @@ const parseSearchItem = (listItem: Element): BandcampSearchItem | undefined => {
 
   const name = extractTextContent(headingLink);
   const url = extractTextContent(urlElement);
-  if (!name || !url) return undefined;
+  if (!name || !url) {
+    return undefined;
+  }
 
   const tagsText = extractTextContent(tagsElement);
   const tags = tagsText

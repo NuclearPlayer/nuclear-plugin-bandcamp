@@ -1,4 +1,7 @@
-import type { NuclearPlugin, NuclearPluginAPI } from '@nuclearplayer/plugin-sdk';
+import type {
+  NuclearPlugin,
+  NuclearPluginAPI,
+} from '@nuclearplayer/plugin-sdk';
 
 import { METADATA_PROVIDER_ID, STREAMING_PROVIDER_ID } from './config';
 import { createMetadataProvider } from './metadata-provider';

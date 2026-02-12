@@ -4,37 +4,30 @@ import type {
   Artist,
   ArtistRef,
   ArtworkSet,
-  ProviderRef,
   StreamCandidate,
   Track,
 } from '@nuclearplayer/plugin-sdk';
 
+import { METADATA_PROVIDER_ID } from './config';
+import { encodeId, makeSource } from './html';
+import type { LastfmArtist } from './lastfm';
 import type {
   BandcampAlbumDetail,
   BandcampArtistDetail,
   BandcampDiscographyItem,
   BandcampSearchItem,
 } from './types';
-import type { LastfmArtist } from './lastfm';
-import { encodeId } from './html';
-import { METADATA_PROVIDER_ID } from './config';
 
 const LARGE_IMAGE_SUFFIX = '_10.jpg';
 const THUMBNAIL_IMAGE_SUFFIX = '_2.jpg';
 
-const makeSource = (url: string): ProviderRef => ({
-  provider: METADATA_PROVIDER_ID,
-  id: encodeId(url),
-  url,
-});
-
-const replaceImageSuffix = (
-  imageUrl: string,
-  suffix: string,
-): string => imageUrl.replace(/_\d+\.jpg$/, suffix);
+const replaceImageSuffix = (imageUrl: string, suffix: string): string =>
+  imageUrl.replace(/_\d+\.jpg$/, suffix);
 
 const makeArtworkSet = (imageUrl?: string): ArtworkSet | undefined => {
-  if (!imageUrl) return undefined;
+  if (!imageUrl) {
+    return undefined;
+  }
   return {
     items: [
       {
@@ -58,10 +51,10 @@ const extractArtistBaseUrl = (itemUrl: string): string => {
   return parsed.origin;
 };
 
-const parseArtistFromSubhead = (
-  subhead?: string,
-): string | undefined => {
-  if (!subhead) return undefined;
+const parseArtistFromSubhead = (subhead?: string): string | undefined => {
+  if (!subhead) {
+    return undefined;
+  }
   const byMatch = subhead.match(/by\s+(.+)/);
   return byMatch?.[1]?.trim();
 };
@@ -69,7 +62,9 @@ const parseArtistFromSubhead = (
 const parseAlbumAndArtistFromSubhead = (
   subhead?: string,
 ): { album?: string; artist?: string } => {
-  if (!subhead) return {};
+  if (!subhead) {
+    return {};
+  }
 
   const fromByMatch = subhead.match(/from\s+(.+?)\s+by\s+(.+)/);
   if (fromByMatch) {
@@ -87,24 +82,22 @@ const parseAlbumAndArtistFromSubhead = (
   return {};
 };
 
-const combineTags = (
-  genre?: string,
-  tags?: string[],
-): string[] | undefined => {
-  const combined = [
-    ...(genre ? [genre] : []),
-    ...(tags ?? []),
-  ];
+const combineTags = (genre?: string, tags?: string[]): string[] | undefined => {
+  const combined = [...(genre ? [genre] : []), ...(tags ?? [])];
   return combined.length > 0 ? combined : undefined;
 };
 
 const parseReleaseDate = (
   dateString?: string,
 ): { precision: 'year' | 'month' | 'day'; dateIso: string } | undefined => {
-  if (!dateString) return undefined;
+  if (!dateString) {
+    return undefined;
+  }
 
   const parsed = new Date(dateString);
-  if (isNaN(parsed.getTime())) return undefined;
+  if (isNaN(parsed.getTime())) {
+    return undefined;
+  }
 
   const year = parsed.getUTCFullYear();
   const month = String(parsed.getUTCMonth() + 1).padStart(2, '0');
@@ -121,42 +114,49 @@ export const mapSearchItemToArtistRef = (
 ): ArtistRef => ({
   name: item.name,
   artwork: makeArtworkSet(item.imageUrl),
-  source: makeSource(item.url),
+  source: makeSource(METADATA_PROVIDER_ID, item.url),
 });
 
-export const mapSearchItemToAlbumRef = (
-  item: BandcampSearchItem,
-): AlbumRef => {
+export const mapSearchItemToAlbumRef = (item: BandcampSearchItem): AlbumRef => {
   const artistName = parseArtistFromSubhead(item.subhead);
   const artistUrl = extractArtistBaseUrl(item.url);
 
   return {
     title: item.name,
     artists: artistName
-      ? [{ name: artistName, source: makeSource(artistUrl) }]
+      ? [
+          {
+            name: artistName,
+            source: makeSource(METADATA_PROVIDER_ID, artistUrl),
+          },
+        ]
       : undefined,
     artwork: makeArtworkSet(item.imageUrl),
-    source: makeSource(item.url),
+    source: makeSource(METADATA_PROVIDER_ID, item.url),
   };
 };
 
-export const mapSearchItemToTrack = (
-  item: BandcampSearchItem,
-): Track => {
+export const mapSearchItemToTrack = (item: BandcampSearchItem): Track => {
   const { album, artist } = parseAlbumAndArtistFromSubhead(item.subhead);
   const artistUrl = extractArtistBaseUrl(item.url);
 
   return {
     title: item.name,
     artists: artist
-      ? [{ name: artist, roles: [], source: makeSource(artistUrl) }]
+      ? [
+          {
+            name: artist,
+            roles: [],
+            source: makeSource(METADATA_PROVIDER_ID, artistUrl),
+          },
+        ]
       : [],
     album: album
-      ? { title: album, source: makeSource(artistUrl) }
+      ? { title: album, source: makeSource(METADATA_PROVIDER_ID, artistUrl) }
       : undefined,
     tags: combineTags(item.genre, item.tags),
     artwork: makeArtworkSet(item.imageUrl),
-    source: makeSource(item.url),
+    source: makeSource(METADATA_PROVIDER_ID, item.url),
   };
 };
 
@@ -168,40 +168,40 @@ export const mapArtistDetail = (
   bio: detail.bio || lastfmData?.artist?.bio?.content,
   artwork: makeArtworkSet(detail.imageUrl),
   tags: lastfmData?.artist?.tags?.tag.map((tag) => tag.name),
-  source: makeSource(detail.url),
+  source: makeSource(METADATA_PROVIDER_ID, detail.url),
 });
 
-export const mapAlbumDetail = (
-  detail: BandcampAlbumDetail,
-): Album => ({
+export const mapAlbumDetail = (detail: BandcampAlbumDetail): Album => ({
   title: detail.name,
   artists: [
     {
       name: detail.artistName,
       roles: [],
       source: detail.artistUrl
-        ? makeSource(detail.artistUrl)
+        ? makeSource(METADATA_PROVIDER_ID, detail.artistUrl)
         : undefined,
     },
   ],
-  tracks: detail.tracks.filter((track) => track.streamable).map((track) => ({
-    title: track.title,
-    artists: [
-      {
-        name: detail.artistName,
-        source: detail.artistUrl
-          ? makeSource(detail.artistUrl)
-          : makeSource(detail.url),
-      },
-    ],
-    artwork: makeArtworkSet(detail.imageUrl),
-    source: makeSource(track.url ?? detail.url),
-    durationMs: track.durationMs,
-  })),
+  tracks: detail.tracks
+    .filter((track) => track.streamable)
+    .map((track) => ({
+      title: track.title,
+      artists: [
+        {
+          name: detail.artistName,
+          source: detail.artistUrl
+            ? makeSource(METADATA_PROVIDER_ID, detail.artistUrl)
+            : makeSource(METADATA_PROVIDER_ID, detail.url),
+        },
+      ],
+      artwork: makeArtworkSet(detail.imageUrl),
+      source: makeSource(METADATA_PROVIDER_ID, track.url ?? detail.url),
+      durationMs: track.durationMs,
+    })),
   releaseDate: parseReleaseDate(detail.releaseDate),
   genres: detail.tags,
   artwork: makeArtworkSet(detail.imageUrl),
-  source: makeSource(detail.url),
+  source: makeSource(METADATA_PROVIDER_ID, detail.url),
 });
 
 export const mapDiscographyItemToAlbumRef = (
@@ -209,7 +209,7 @@ export const mapDiscographyItemToAlbumRef = (
 ): AlbumRef => ({
   title: item.title,
   artwork: makeArtworkSet(item.imageUrl),
-  source: makeSource(item.url),
+  source: makeSource(METADATA_PROVIDER_ID, item.url),
 });
 
 export const mapSearchItemToStreamCandidate = (
@@ -221,5 +221,5 @@ export const mapSearchItemToStreamCandidate = (
     ? replaceImageSuffix(item.imageUrl, THUMBNAIL_IMAGE_SUFFIX)
     : undefined,
   failed: false,
-  source: makeSource(item.url),
+  source: makeSource(METADATA_PROVIDER_ID, item.url),
 });

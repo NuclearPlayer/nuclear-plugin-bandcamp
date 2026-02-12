@@ -1,3 +1,7 @@
+import type { ProviderRef } from '@nuclearplayer/plugin-sdk';
+
+import type { DataTralbum } from './types';
+
 export type FetchFn = (
   input: RequestInfo | URL,
   init?: RequestInit,
@@ -35,15 +39,32 @@ export const extractTextContent = (
 export const extractJsonLd = <T>(doc: Document): T | undefined => {
   const scripts = doc.querySelectorAll('script[type="application/ld+json"]');
   const script = Array.from(scripts).find((script) => script.textContent);
-  if (!script?.textContent) return undefined;
+  if (!script?.textContent) {
+    return undefined;
+  }
   return JSON.parse(script.textContent) as T;
 };
 
 export const parseIsoDuration = (iso: string): number | undefined => {
   const match = iso.match(/P(?:(\d+)H)?(\d+)M(\d+)S/);
-  if (!match) return undefined;
+  if (!match) {
+    return undefined;
+  }
   const [, hours, mins, secs] = match;
-  return (
-    (Number(hours ?? 0) * 3600 + Number(mins) * 60 + Number(secs)) * 1000
-  );
+  return (Number(hours ?? 0) * 3600 + Number(mins) * 60 + Number(secs)) * 1000;
 };
+
+export const extractDataTralbum = (doc: Document): DataTralbum | undefined => {
+  const script = doc.querySelector('script[data-tralbum]');
+  const raw = script?.getAttribute('data-tralbum');
+  if (!raw) {
+    return undefined;
+  }
+  return JSON.parse(raw) as DataTralbum;
+};
+
+export const makeSource = (providerId: string, url: string): ProviderRef => ({
+  provider: providerId,
+  id: encodeId(url),
+  url,
+});

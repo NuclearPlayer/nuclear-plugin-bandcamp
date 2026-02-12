@@ -51,9 +51,7 @@ export type JsonLdMusicAlbum = {
   byArtist: { '@type': string; name: string; url?: string };
   datePublished?: string;
   image?: string;
-  numTracks?: number;
   track?: {
-    numberOfItems: number;
     itemListElement: {
       position: number;
       '@type': string;
@@ -95,7 +93,6 @@ export type DataTralbum = {
 };
 
 export type DataBand = {
-  id: number;
   name: string;
   image_id?: number;
 };

@@ -1,6 +1,6 @@
+import { ARTIST_CACHE_TTL_MS, BANDCAMP_IMAGE_BASE } from './config';
 import type { FetchFn } from './html';
 import { extractJsonLd, extractTextContent, fetchHtml } from './html';
-import { ARTIST_CACHE_TTL_MS, BANDCAMP_IMAGE_BASE } from './config';
 import type {
   BandcampArtistDetail,
   BandcampDiscographyItem,
@@ -25,13 +25,20 @@ const buildBandImageUrl = (imageId: number): string => {
 
 const extractDataBand = (doc: Document): DataBand | undefined => {
   const script = doc.querySelector('script[data-band]');
-  if (!script) return undefined;
+  if (!script) {
+    return undefined;
+  }
   const raw = script.getAttribute('data-band');
-  if (!raw) return undefined;
+  if (!raw) {
+    return undefined;
+  }
   return JSON.parse(raw) as DataBand;
 };
 
-const artistCache = new Map<string, { data: BandcampArtistDetail; timestamp: number }>();
+const artistCache = new Map<
+  string,
+  { data: BandcampArtistDetail; timestamp: number }
+>();
 
 export const getArtistDetails = async (
   fetchFn: FetchFn,
@@ -98,14 +105,18 @@ export const getArtistDiscography = async (
       const titleElement = gridItem.querySelector(SELECTORS.discographyTitle);
 
       const href = link?.getAttribute('href');
-      if (!href) return accumulated;
+      if (!href) {
+        return accumulated;
+      }
 
       const fullUrl = new URL(href, artistUrl).href;
       const title = extractTextContent(titleElement) ?? '';
       const imageUrl = image?.getAttribute('src') ?? undefined;
 
       const dataItemId = gridItem.getAttribute('data-item-id') ?? '';
-      const itemType = dataItemId.startsWith('album') ? 'album' as const : 'track' as const;
+      const itemType = dataItemId.startsWith('album')
+        ? ('album' as const)
+        : ('track' as const);
 
       accumulated.push({
         title,

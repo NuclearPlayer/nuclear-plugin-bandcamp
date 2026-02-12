@@ -24,9 +24,23 @@ export const cacheStreamUrl = (
   streamUrls.set(candidateId, streamUrl);
 };
 
-export const getCachedStreamUrl = (
-  candidateId: string,
-): string | undefined => streamUrls.get(candidateId);
+export const getCachedStreamUrl = (candidateId: string): string | undefined =>
+  streamUrls.get(candidateId);
+
+export const cacheTrackUrls = (
+  tracks: {
+    title: string;
+    artists: { name: string }[];
+    source: { url?: string };
+  }[],
+): void => {
+  for (const track of tracks) {
+    const artistName = track.artists[0]?.name;
+    if (artistName && track.source.url) {
+      cacheTrackUrl(artistName, track.title, track.source.url);
+    }
+  }
+};
 
 export const clearTrackUrlCache = (): void => {
   trackUrls.clear();
