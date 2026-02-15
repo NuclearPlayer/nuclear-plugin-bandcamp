@@ -1,7 +1,7 @@
 import type {
   Album,
   AlbumRef,
-  Artist,
+  ArtistBio,
   ArtistRef,
   MetadataProvider,
   NuclearPluginAPI,
@@ -35,7 +35,7 @@ export const createMetadataProvider = (
   name: 'Bandcamp',
   searchCapabilities: ['artists', 'albums', 'tracks'],
   artistMetadataCapabilities: [
-    'artistDetails',
+    'artistBio',
     'artistAlbums',
     'artistTopTracks',
     'artistRelatedArtists',
@@ -77,7 +77,7 @@ export const createMetadataProvider = (
     return tracks;
   },
 
-  fetchArtistDetails: async (artistId: string): Promise<Artist> => {
+  fetchArtistBio: async (artistId: string): Promise<ArtistBio> => {
     const artistUrl = decodeId(artistId);
     const detail = await getArtistDetails(api.Http.fetch, artistUrl);
     const lastfmArtist = await lastfm.getArtistInfo(detail.name);

@@ -1,7 +1,7 @@
 import type {
   Album,
   AlbumRef,
-  Artist,
+  ArtistBio,
   ArtistRef,
   ArtworkSet,
   StreamCandidate,
@@ -163,7 +163,7 @@ export const mapSearchItemToTrack = (item: BandcampSearchItem): Track => {
 export const mapArtistDetail = (
   detail: BandcampArtistDetail,
   lastfmData?: LastfmArtist,
-): Artist => ({
+): ArtistBio => ({
   name: detail.name,
   bio: detail.bio || lastfmData?.artist?.bio?.content,
   artwork: makeArtworkSet(detail.imageUrl),
