@@ -12,7 +12,11 @@ import type {
 
 import { getAlbumDetails } from './album';
 import { getArtistDetails, getArtistDiscography } from './artist';
-import { DEFAULT_SEARCH_LIMIT, METADATA_PROVIDER_ID } from './config';
+import {
+  DEFAULT_SEARCH_LIMIT,
+  METADATA_PROVIDER_ID,
+  STREAMING_PROVIDER_ID,
+} from './config';
 import { decodeId, encodeId } from './html';
 import * as lastfm from './lastfm';
 import { mapLastfmSimilarArtists, mapLastfmTopTracks } from './lastfm-mappers';
@@ -33,6 +37,7 @@ export const createMetadataProvider = (
   id: METADATA_PROVIDER_ID,
   kind: 'metadata',
   name: 'Bandcamp',
+  streamingProviderId: STREAMING_PROVIDER_ID,
   searchCapabilities: ['artists', 'albums', 'tracks'],
   artistMetadataCapabilities: [
     'artistBio',
