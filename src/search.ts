@@ -1,95 +1,77 @@
-import { BANDCAMP_SEARCH_URL } from './config';
+import { BANDCAMP_IMAGE_BASE, BANDCAMP_SEARCH_API_URL } from './config';
 import type { FetchFn } from './html';
-import { extractTextContent, fetchHtml } from './html';
-import type { BandcampSearchItem } from './types';
+import type {
+  BandcampApiSearchResponse,
+  BandcampApiSearchResult,
+  BandcampSearchItem,
+} from './types';
 
-const SELECTORS = {
-  resultList: 'li.searchresult',
-  image: 'div.art img',
-  heading: 'div.heading a',
-  subhead: 'div.subhead',
-  itemUrl: 'div.itemurl a',
-  tags: 'div.tags',
-  released: 'div.released',
-  genre: 'div.genre',
-} as const;
-
-const parseSearchItem = (listItem: Element): BandcampSearchItem | undefined => {
-  const dataAttr = listItem.getAttribute('data-search');
-  if (!dataAttr) {
-    return undefined;
+const resolveImageUrl = (result: BandcampApiSearchResult): string | undefined => {
+  if (result.type === 'b') {
+    return result.img;
   }
 
-  const searchData = JSON.parse(dataAttr) as {
-    type: 'b' | 'a' | 't';
-    id: number;
-  };
-
-  const imageElement = listItem.querySelector(SELECTORS.image);
-  const headingLink = listItem.querySelector(SELECTORS.heading);
-  const subheadElement = listItem.querySelector(SELECTORS.subhead);
-  const urlElement = listItem.querySelector(SELECTORS.itemUrl);
-  const tagsElement = listItem.querySelector(SELECTORS.tags);
-  const releasedElement = listItem.querySelector(SELECTORS.released);
-  const genreElement = listItem.querySelector(SELECTORS.genre);
-
-  const name = extractTextContent(headingLink);
-  const url = extractTextContent(urlElement);
-  if (!name || !url) {
-    return undefined;
+  if (result.art_id) {
+    const paddedId = String(result.art_id).padStart(10, '0');
+    return `${BANDCAMP_IMAGE_BASE}/a${paddedId}_2.jpg`;
   }
 
-  const tagsText = extractTextContent(tagsElement);
-  const tags = tagsText
-    ?.replace(/^tags:/, '')
-    .split(',')
-    .map((tag) => tag.trim())
-    .filter(Boolean);
-
-  const releaseDateText = extractTextContent(releasedElement);
-  const releaseDate = releaseDateText?.replace(/^released\s+/, '');
-
-  const genreText = extractTextContent(genreElement);
-  const genre = genreText?.replace(/^genre:\s*/, '');
-
-  return {
-    type: searchData.type,
-    id: searchData.id,
-    name,
-    url,
-    imageUrl: imageElement?.getAttribute('src') ?? undefined,
-    subhead: extractTextContent(subheadElement),
-    tags,
-    releaseDate,
-    genre,
-  };
+  return result.img;
 };
+
+const buildSubhead = (result: BandcampApiSearchResult): string | undefined => {
+  if (result.type === 'b') {
+    return result.location;
+  }
+  if (result.type === 'a' && result.band_name) {
+    return `by ${result.band_name}`;
+  }
+  if (result.type === 't' && result.band_name) {
+    return result.album_name
+      ? `from ${result.album_name} by ${result.band_name}`
+      : `by ${result.band_name}`;
+  }
+  return undefined;
+};
+
+const resolveUrl = (result: BandcampApiSearchResult): string =>
+  result.item_url_path ?? result.item_url_root;
+
+const toSearchItem = (result: BandcampApiSearchResult): BandcampSearchItem => ({
+  type: result.type,
+  id: result.id,
+  name: result.name,
+  url: resolveUrl(result),
+  imageUrl: resolveImageUrl(result),
+  subhead: buildSubhead(result),
+  tags: result.tag_names ?? undefined,
+  releaseDate: undefined,
+  genre: result.genre_name,
+});
 
 const searchBandcamp = async (
   fetchFn: FetchFn,
   query: string,
-  itemType: string,
+  searchFilter: 'b' | 'a' | 't',
   limit: number,
 ): Promise<BandcampSearchItem[]> => {
-  const searchUrl = `${BANDCAMP_SEARCH_URL}?q=${encodeURIComponent(query)}&item_type=${itemType}&page=1`;
-  const doc = await fetchHtml(fetchFn, searchUrl);
-  const resultItems = doc.querySelectorAll(SELECTORS.resultList);
+  const response = await fetchFn(BANDCAMP_SEARCH_API_URL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      search_text: query,
+      search_filter: searchFilter,
+      full_page: false,
+      fan_id: null,
+    }),
+  });
 
-  const items = Array.from(resultItems).reduce<BandcampSearchItem[]>(
-    (acc, listItem) => {
-      if (acc.length >= limit) {
-        return acc;
-      }
-      const parsed = parseSearchItem(listItem);
-      if (parsed) {
-        acc.push(parsed);
-      }
-      return acc;
-    },
-    [],
-  );
+  if (!response.ok) {
+    throw new Error(`Bandcamp search API returned ${response.status}`);
+  }
 
-  return items;
+  const data = (await response.json()) as BandcampApiSearchResponse;
+  return data.auto.results.slice(0, limit).map(toSearchItem);
 };
 
 export const searchArtists = (

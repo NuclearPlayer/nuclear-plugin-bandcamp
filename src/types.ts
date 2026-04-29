@@ -10,6 +10,27 @@ export type BandcampSearchItem = {
   genre?: string;
 };
 
+export type BandcampApiSearchResult = {
+  type: 'b' | 'a' | 't';
+  id: number;
+  name: string;
+  item_url_root: string;
+  item_url_path?: string;
+  img?: string;
+  art_id?: number | null;
+  tag_names?: string[] | null;
+  genre_name?: string;
+  location?: string;
+  band_name?: string;
+  album_name?: string;
+};
+
+export type BandcampApiSearchResponse = {
+  auto: {
+    results: BandcampApiSearchResult[];
+  };
+};
+
 export type BandcampAlbumDetail = {
   name: string;
   artistName: string;
