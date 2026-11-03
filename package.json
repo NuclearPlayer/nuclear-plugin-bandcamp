@@ -1,6 +1,6 @@
 {
   "name": "nuclear-plugin-bandcamp",
-  "version": "1.1.2",
+  "version": "1.1.3",
   "description": "Bandcamp metadata and streaming provider for Nuclear music player",
   "author": "nukeop",
   "license": "AGPL-3.0-only",
@@ -9,6 +9,7 @@
   "nuclear": {
     "displayName": "Bandcamp",
     "category": "metadata",
+    "categories": ["metadata", "streaming"],
     "icon": {
       "type": "link",
       "link": "https://s4.bcbits.com/img/favicon/apple-touch-icon.png"
