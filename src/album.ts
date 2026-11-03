@@ -23,7 +23,7 @@ export const getAlbumDetails = async (
 
   const albumName = jsonLd?.name ?? '';
   const artistName = jsonLd?.byArtist?.name ?? '';
-  const artistUrl = jsonLd?.byArtist?.url ?? jsonLd?.publisher?.url;
+  const artistUrl = jsonLd?.byArtist?.['@id'] ?? jsonLd?.publisher?.['@id'];
   const imageUrl = jsonLd?.image;
   const releaseDate = jsonLd?.datePublished;
   const tags = jsonLd?.keywords;

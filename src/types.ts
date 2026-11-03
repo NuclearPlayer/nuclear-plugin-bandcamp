@@ -69,7 +69,7 @@ export type BandcampDiscographyItem = {
 export type JsonLdMusicAlbum = {
   '@type': 'MusicAlbum';
   name: string;
-  byArtist: { '@type': string; name: string; url?: string };
+  byArtist: { '@type': string; '@id'?: string; name: string };
   datePublished?: string;
   image?: string;
   track?: {
@@ -84,7 +84,7 @@ export type JsonLdMusicAlbum = {
       };
     }[];
   };
-  publisher?: { '@type': string; name: string; url?: string };
+  publisher?: { '@type': string; '@id'?: string; name: string };
   keywords?: string[];
 };
 
